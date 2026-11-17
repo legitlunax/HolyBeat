@@ -1,0 +1,599 @@
+﻿<Window x:Class="HolyBeat.LiveGuard.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:HolyBeat.LiveGuard.App.Controls"
+        Title="HolyBeat Live Guard" Width="1380" Height="880" MinWidth="1150" MinHeight="740"
+        Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing" Loaded="Window_Loaded">
+    <Grid Margin="14,12,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ============ HEADER ============ -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="36" Height="36" CornerRadius="9" Background="#123A33" Margin="0,0,11,0">
+                    <TextBlock Text="HB" Foreground="#37D6B0" FontWeight="Bold" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="HolyBeat Live Guard" Style="{StaticResource TitleText}" />
+                    <TextBlock Text="Real-time acoustic safety processor - built from the 103 track acoustic study"
+                               Style="{StaticResource MutedText}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="#1D232D" BorderBrush="#2A3340" BorderThickness="1" CornerRadius="12"
+                        Padding="10,4" Margin="0,0,8,0">
+                    <TextBlock x:Name="ModeChipText" Text="PLAYER" FontSize="11" Foreground="#8B98A9" />
+                </Border>
+                <Border Background="#1D232D" BorderBrush="#2A3340" BorderThickness="1" CornerRadius="12"
+                        Padding="10,4" Margin="0,0,8,0">
+                    <TextBlock x:Name="DetectedChipText" Text="DETECTED: -" FontSize="11" Foreground="#37D6B0" />
+                </Border>
+                <Button x:Name="BypassButton" Content="Bypass (A/B)" Click="BypassButton_Click" Margin="0,0,8,0" />
+                <Button x:Name="ConvertButton" Content="Convert to Safe..." Click="ConvertButton_Click" Margin="0,0,8,0" />
+                <Button x:Name="OpenFileButton" Content="Open audio file" Click="OpenFileButton_Click"
+                        Style="{StaticResource AccentButton}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ============ MAIN ============ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="292" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="346" />
+            </Grid.ColumnDefinitions>
+
+            <!-- PRESETS -->
+            <Grid Grid.Column="0" Margin="0,0,12,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="SAFETY PROFILES" Style="{StaticResource SectionText}" Margin="0,0,0,8" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ProfileList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                                        BorderThickness="1" CornerRadius="9" Padding="11,9" Margin="0,0,0,7"
+                                        Tag="{Binding Id}" MouseLeftButtonUp="ProfileCard_Click" Cursor="Hand">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding AccentColor}" Margin="0,0,8,0"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}"
+                                                   Margin="0,6,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Margin="0,8,0,0">
+                    <CheckBox x:Name="AutoProfileCheck" Content="Auto-switch profile from the live detector"
+                              Checked="AutoProfileCheck_Changed" Unchecked="AutoProfileCheck_Changed" Margin="0,0,0,6" />
+                    <CheckBox x:Name="RunAtStartupCheck" Content="Start with Windows"
+                              Checked="RunAtStartupCheck_Changed" Unchecked="RunAtStartupCheck_Changed" />
+                </StackPanel>
+            </Grid>
+
+            <!-- CENTRE: SPECTRUM + METRICS + DETECTOR -->
+            <Grid Grid.Column="1" Margin="0,0,12,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="236" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <TextBlock Text="LIVE SPECTRUM (PROCESSED OUTPUT)" Style="{StaticResource SectionText}" />
+                    <TextBlock x:Name="SpectrumCaption" HorizontalAlignment="Right" Style="{StaticResource MutedText}" />
+                </Grid>
+
+                <Border Grid.Row="1" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                        BorderThickness="1" CornerRadius="9" Padding="1">
+                    <controls:SpectrumControl x:Name="Spectrum" />
+                </Border>
+
+                <ItemsControl Grid.Row="2" x:Name="MetricTiles" Margin="0,10,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="4" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="9,7" Margin="0,0,8,8">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource MutedText}" FontSize="10.5" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                        <TextBlock Text="{Binding Value}" FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="#E6EDF5" />
+                                        <TextBlock Text="{Binding Unit}" Style="{StaticResource MutedText}" Margin="4,3,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Grid.Row="3" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                        BorderThickness="1" CornerRadius="9" Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="ACOUSTIC PROFILE DETECTOR" Style="{StaticResource SectionText}" />
+                                <TextBlock x:Name="ConfidenceText" Style="{StaticResource MutedText}" Margin="10,1,0,0" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#1E4B44" CornerRadius="12" Padding="10,3">
+                                <TextBlock x:Name="ClassificationText" Text="SAFE" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#37D6B0" />
+                            </Border>
+                        </Grid>
+
+                        <ProgressBar Grid.Row="1" x:Name="ConfidenceBar" Height="5" Margin="0,9,0,9"
+                                     Minimum="0" Maximum="1" Foreground="#37D6B0" Background="#232B36"
+                                     BorderThickness="0" />
+
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ReasonList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="•" Foreground="#37D6B0" Margin="0,0,7,0" />
+                                            <TextBlock Text="{Binding}" Style="{StaticResource MutedText}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- CONFIGURATION -->
+            <Border Grid.Column="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                    BorderThickness="1" CornerRadius="9" Padding="12,10,12,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="CONFIGURATION" Style="{StaticResource SectionText}" />
+                        <TextBlock x:Name="ActiveProfileText" HorizontalAlignment="Right" Style="{StaticResource MutedText}"
+                                   Text="Safe / Optimal Zone" />
+                    </Grid>
+
+                    <Border Grid.Row="1" Background="#10151B" BorderBrush="#232B36" BorderThickness="1"
+                            CornerRadius="9" Padding="6" Margin="0,0,0,10" Height="158">
+                        <Grid>
+                            <controls:StageMapControl x:Name="StageMap" />
+                            <TextBlock Text="VIRTUAL STAGE" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                       Style="{StaticResource MutedText}" FontSize="10" Margin="0,2,6,0" />
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                        <StackPanel>
+
+                            <TextBlock Text="VIRTUAL STAGE (HEADPHONE SURROUND)" Foreground="#7C8CFF" FontWeight="SemiBold" FontSize="11.5" Margin="0,4,0,6" />
+                            <CheckBox x:Name="ChkStage" Content="Enable the virtual stage" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Stage width" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldStageWidth" Minimum="0" Maximum="1.5" TickFrequency="0.05" ValueChanged="SldStageWidth_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldStageWidth, Converter={StaticResource UnitFormat}, ConverterParameter=stageWidth}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Height layer" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldStageHeight" Minimum="0" Maximum="1" TickFrequency="0.05" ValueChanged="SldStageHeight_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldStageHeight, Converter={StaticResource UnitFormat}, ConverterParameter=percent}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Centre focus" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldStageCentre" Minimum="0" Maximum="1" TickFrequency="0.05" ValueChanged="SldStageCentre_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldStageCentre, Converter={StaticResource UnitFormat}, ConverterParameter=percent}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Rumble bus" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldStageLfe" Minimum="0" Maximum="1" TickFrequency="0.05" ValueChanged="SldStageLfe_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldStageLfe, Converter={StaticResource UnitFormat}, ConverterParameter=percent}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Surround bus" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldStageSurround" Minimum="0" Maximum="1" TickFrequency="0.05" ValueChanged="SldStageSurround_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldStageSurround, Converter={StaticResource UnitFormat}, ConverterParameter=percent}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="SAFETY EQ" Foreground="#37D6B0" FontWeight="SemiBold" FontSize="11.5" Margin="0,4,0,6" />
+                            <CheckBox x:Name="ChkHighPass" Content="Sub-rumble high-pass (24 dB/oct)"
+                                      Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Cutoff" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldHighPass" Minimum="20" Maximum="60" TickFrequency="1"
+                                        ValueChanged="SldHighPass_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldHighPass, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkMidGlue" Content="Mid-range glue bell" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Gain" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldMidGlueDb" Minimum="-4" Maximum="6" TickFrequency="0.1"
+                                        ValueChanged="SldMidGlueDb_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldMidGlueDb, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Centre" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldMidGlueHz" Minimum="300" Maximum="1000" TickFrequency="10"
+                                        ValueChanged="SldMidGlueHz_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldMidGlueHz, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkHighShelf" Content="Air shelf roll-off (digital hiss)" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Shelf" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldHighShelfDb" Minimum="-8" Maximum="0" TickFrequency="0.1"
+                                        ValueChanged="SldHighShelfDb_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldHighShelfDb, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Shelf start" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldHighShelfHz" Minimum="6000" Maximum="12000" TickFrequency="100"
+                                        ValueChanged="SldHighShelfHz_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldHighShelfHz, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="DE-HARSH (2.8 - 5.5 kHz)" Foreground="#FF7A59" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkDeHarsh" Content="Dynamic resonance suppression" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Band low" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDeHarshLow" Minimum="1800" Maximum="4000" TickFrequency="50"
+                                        ValueChanged="SldDeHarshLow_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDeHarshLow, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Band high" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDeHarshHigh" Minimum="4500" Maximum="8000" TickFrequency="50"
+                                        ValueChanged="SldDeHarshHigh_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDeHarshHigh, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Threshold" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDeHarshThreshold" Minimum="-40" Maximum="-6" TickFrequency="0.5"
+                                        ValueChanged="SldDeHarshThreshold_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDeHarshThreshold, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Ratio" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDeHarshRatio" Minimum="1" Maximum="8" TickFrequency="0.1"
+                                        ValueChanged="SldDeHarshRatio_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDeHarshRatio, Converter={StaticResource UnitFormat}, ConverterParameter=ratio}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Max cut" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDeHarshMax" Minimum="0" Maximum="12" TickFrequency="0.5"
+                                        ValueChanged="SldDeHarshMax_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDeHarshMax, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="ANTI-PUMPING (100 Hz - 1.5 kHz)" Foreground="#5B8CFF" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkExpansion" Content="Upward expansion / envelope smoothing" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Max lift" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldExpansionBoost" Minimum="0" Maximum="10" TickFrequency="0.1"
+                                        ValueChanged="SldExpansionBoost_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldExpansionBoost, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Sensitivity" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldExpansionSens" Minimum="0" Maximum="1.5" TickFrequency="0.05"
+                                        ValueChanged="SldExpansionSens_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldExpansionSens, Converter={StaticResource UnitFormat}, ConverterParameter=width}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Attack" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldExpansionAttack" Minimum="1" Maximum="30" TickFrequency="0.5"
+                                        ValueChanged="SldExpansionAttack_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldExpansionAttack, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Release" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldExpansionRelease" Minimum="60" Maximum="400" TickFrequency="5"
+                                        ValueChanged="SldExpansionRelease_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldExpansionRelease, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="SUB BASS &amp; STEREO FIELD" Foreground="#B98CFF" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkSub" Content="Sub-bass envelope tightening (40-120 Hz)" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Threshold" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldSubThreshold" Minimum="-40" Maximum="-8" TickFrequency="0.5"
+                                        ValueChanged="SldSubThreshold_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldSubThreshold, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Max cut" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldSubMax" Minimum="0" Maximum="12" TickFrequency="0.5"
+                                        ValueChanged="SldSubMax_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldSubMax, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Attack" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldSubAttack" Minimum="2" Maximum="40" TickFrequency="0.5"
+                                        ValueChanged="SldSubAttack_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldSubAttack, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Release" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldSubRelease" Minimum="30" Maximum="250" TickFrequency="5"
+                                        ValueChanged="SldSubRelease_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldSubRelease, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkMonoBass" Content="Mono bass below 120 Hz" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Crossover" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldMonoBassHz" Minimum="60" Maximum="240" TickFrequency="5"
+                                        ValueChanged="SldMonoBassHz_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldMonoBassHz, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkNarrowing" Content="Narrow high-frequency stereo width" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Width" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldHfWidth" Minimum="0.2" Maximum="1" TickFrequency="0.01"
+                                        ValueChanged="SldHfWidth_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldHfWidth, Converter={StaticResource UnitFormat}, ConverterParameter=width}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="DARK NOISE GUARD (SWEEP &amp; CLARITY)" Foreground="#B98CFF" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkDarkNoiseGuard" Content="Stabilize background filter sweeps" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Guard strength" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDarkGuardStrength" Minimum="0" Maximum="1.5" TickFrequency="0.05"
+                                        ValueChanged="SldDarkGuardStrength_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDarkGuardStrength, Converter={StaticResource UnitFormat}, ConverterParameter=width}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Max damping" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldDarkGuardMaxDb" Minimum="0" Maximum="9" TickFrequency="0.5"
+                                        ValueChanged="SldDarkGuardMaxDb_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldDarkGuardMaxDb, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="WARM TAIL &amp; SATURATION" Foreground="#FF5FA2" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkWarmTail" Content="Warm tail (Who's The Dreamer? trick)" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Bite hold" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldHoldMs" Minimum="0" Maximum="40" TickFrequency="0.5"
+                                        ValueChanged="SldHoldMs_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldHoldMs, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Close time" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldCloseMs" Minimum="3" Maximum="60" TickFrequency="0.5"
+                                        ValueChanged="SldCloseMs_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldCloseMs, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Reopen" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldReopenMs" Minimum="40" Maximum="400" TickFrequency="5"
+                                        ValueChanged="SldReopenMs_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldReopenMs, Converter={StaticResource UnitFormat}, ConverterParameter=ms}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Closed cutoff" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldClosedHz" Minimum="1200" Maximum="5000" TickFrequency="50"
+                                        ValueChanged="SldClosedHz_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldClosedHz, Converter={StaticResource UnitFormat}, ConverterParameter=Hz}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkSaturation" Content="Warm tape saturation" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Drive" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldSaturationDrive" Minimum="1" Maximum="4" TickFrequency="0.05"
+                                        ValueChanged="SldSaturationDrive_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldSaturationDrive, Converter={StaticResource UnitFormat}, ConverterParameter=width}" />
+                            </Grid>
+                            <CheckBox x:Name="ChkRoom" Content="Short dark room reflection" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Mix" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldRoomMix" Minimum="0" Maximum="0.3" TickFrequency="0.005"
+                                        ValueChanged="SldRoomMix_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldRoomMix, Converter={StaticResource UnitFormat}, ConverterParameter=mix}" />
+                            </Grid>
+
+                            <Separator Background="#232B36" Margin="0,2,0,10" />
+
+                            <TextBlock Text="MASTERING" Foreground="#FFB020" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,6" />
+                            <CheckBox x:Name="ChkLoudness" Content="Loudness target" Checked="Check_Changed" Unchecked="Check_Changed" />
+                            <Grid Margin="0,2,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Target" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldTargetLufs" Minimum="-18" Maximum="-8" TickFrequency="0.5"
+                                        ValueChanged="SldTargetLufs_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldTargetLufs, Converter={StaticResource UnitFormat}, ConverterParameter=LUFS}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="True peak" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldTruePeak" Minimum="-3" Maximum="-0.1" TickFrequency="0.1"
+                                        ValueChanged="SldTruePeak_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldTruePeak, Converter={StaticResource UnitFormat}, ConverterParameter=dBTP}" />
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Output gain" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                <Slider Grid.Column="1" x:Name="SldOutputGain" Minimum="-12" Maximum="12" TickFrequency="0.5"
+                                        ValueChanged="SldOutputGain_ValueChanged" />
+                                <TextBlock Grid.Column="2" Foreground="#37D6B0" FontSize="11" VerticalAlignment="Center"
+                                           HorizontalAlignment="Right" Text="{Binding Value, ElementName=SldOutputGain, Converter={StaticResource UnitFormat}, ConverterParameter=dB}" />
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Grid Grid.Row="3" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="ConfigHint" Style="{StaticResource MutedText}"
+                                   Text="Changes apply live and are stored in %APPDATA%\HolyBeat\config.json" />
+                        <Button Grid.Column="1" Content="Restore defaults" Click="RestoreDefaults_Click" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ============ BOTTOM BAR ============ -->
+        <Border Grid.Row="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                BorderThickness="1" CornerRadius="9" Padding="12,8" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="MODE" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="ModeCombo" Width="160" SelectionChanged="ModeCombo_SelectionChanged">
+                        <ComboBoxItem Content="Player" />
+                        <ComboBoxItem Content="System monitor" />
+                        <ComboBoxItem Content="System-wide" />
+                    </ComboBox>
+                    <TextBlock x:Name="ModeHint" Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                               Margin="10,0,0,0" Text="Processes the built-in player." />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="CAPTURE" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="CaptureCombo" Width="190" SelectionChanged="DeviceCombo_SelectionChanged" />
+                    <Button Content="Refresh" Click="RefreshDevices_Click" Margin="8,0,0,0" Padding="8,3" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="OUTPUT" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="OutputCombo" Width="190" SelectionChanged="DeviceCombo_SelectionChanged" />
+                </StackPanel>
+
+                <TextBlock Grid.Column="3" x:Name="StatusText" Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                           Margin="16,0,12,0" Text="Ready." />
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="VOLUME" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <Slider x:Name="VolumeSlider" Width="110" Minimum="0" Maximum="1" TickFrequency="0.05"
+                            ValueChanged="VolumeSlider_ValueChanged" VerticalAlignment="Center" />
+                    <Button x:Name="PlayButton" Content="Play" Click="PlayButton_Click" Margin="12,0,0,0" />
+                    <Button x:Name="StopButton" Content="Stop" Click="StopButton_Click" Margin="6,0,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

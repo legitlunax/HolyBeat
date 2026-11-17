@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HolyBeat.LiveGuard.App/HolyBeat.LiveGuard.App.csproj" />
+    <Project Path="src/HolyBeat.LiveGuard.Core/HolyBeat.LiveGuard.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HolyBeat.LiveGuard.Tests/HolyBeat.LiveGuard.Tests.csproj" />
+  </Folder>
+</Solution>

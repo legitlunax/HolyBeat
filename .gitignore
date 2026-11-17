@@ -1,0 +1,14 @@
+# Build and publish output
+/dist/
+**/bin/
+**/obj/
+
+# Local audio references are not part of the source distribution
+/reference/
+*Music Mix.txt
+
+# IDE and user-specific files
+.vs/
+.idea/
+*.user
+*.suo

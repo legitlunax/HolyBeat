@@ -1,0 +1,118 @@
+<Window x:Class="HolyBeat.LiveGuard.App.ConverterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="HolyBeat Safe Music Converter" Width="960" Height="640" MinWidth="780" MinHeight="520"
+        Background="{StaticResource BgBrush}" WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Safe &amp; Healthy Music Converter" Style="{StaticResource TitleText}" />
+            <TextBlock Text="Analyses tracks for Mute (isolation), Noise (headaches), Dark Noise (100% dangerous), and Dual-Layer signatures, then renders fatigue-free audio."
+                       Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+        </StackPanel>
+
+        <!-- CONTROLS -->
+        <Border Grid.Row="1" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                BorderThickness="1" CornerRadius="9" Padding="12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="AddFilesButton" Content="Add audio file(s)..." Click="AddFilesButton_Click" Margin="0,0,8,0" />
+                    <Button x:Name="AddFolderButton" Content="Add folder..." Click="AddFolderButton_Click" Margin="0,0,8,0" />
+                    <Button x:Name="ClearButton" Content="Clear list" Click="ClearButton_Click" Margin="0,0,18,0" />
+
+                    <TextBlock Text="PROFILE" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="ProfileCombo" Width="230" Margin="0,0,16,0" />
+
+                    <TextBlock Text="FORMAT" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="FormatCombo" Width="165">
+                        <ComboBoxItem Content="WAV (24-bit Lossless)" Tag="Wav24" IsSelected="True" />
+                        <ComboBoxItem Content="WAV (32-bit Float)" Tag="WavFloat32" />
+                        <ComboBoxItem Content="MP3 (320 kbps)" Tag="Mp3" />
+                    </ComboBox>
+                </StackPanel>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="OUTPUT FOLDER" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,8,0">
+                        <TextBlock x:Name="OutputFolderText" Text="(Same folder \ Safe)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </Border>
+                    <Button Grid.Column="2" x:Name="BrowseOutputButton" Content="Browse..." Click="BrowseOutputButton_Click" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- QUEUE & SAFETY REPORT -->
+        <Border Grid.Row="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StrokeBrush}"
+                BorderThickness="1" CornerRadius="9" Padding="10">
+            <ListView x:Name="QueueList" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextBrush}"
+                      MouseDoubleClick="QueueList_MouseDoubleClick">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+                        <Setter Property="Padding" Value="4,5" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Track" Width="230" DisplayMemberBinding="{Binding FileName}" />
+                        <GridViewColumn Header="Status" Width="110" DisplayMemberBinding="{Binding Status}" />
+                        <GridViewColumn Header="Detected Category" Width="140" DisplayMemberBinding="{Binding Category}" />
+                        <GridViewColumn Header="Profile Applied" Width="155" DisplayMemberBinding="{Binding ProfileApplied}" />
+                        <GridViewColumn Header="LUFS (Src → Safe)" Width="125" DisplayMemberBinding="{Binding LufsChange}" />
+                        <GridViewColumn Header="Harsh dB (Src → Safe)" Width="135" DisplayMemberBinding="{Binding HarshChange}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <!-- PROGRESS -->
+        <Grid Grid.Row="3" Margin="0,10,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ProgressBar x:Name="ProgressBar" Height="8" Minimum="0" Maximum="1" Value="0"
+                         Background="{StaticResource PanelAltBrush}" Foreground="{StaticResource AccentBrush}" BorderThickness="0" />
+            <TextBlock Grid.Column="1" x:Name="ProgressText" Style="{StaticResource MutedText}" Margin="12,0,0,0"
+                       Text="Ready. Add files or a folder to convert." VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- ACTIONS -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                       Text="Tip: Double-click any converted track to audition it in the HolyBeat player." />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="PlayConvertedButton" Content="Play converted" Click="PlayConvertedButton_Click"
+                        IsEnabled="False" Margin="0,0,8,0" />
+                <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" IsEnabled="False" Margin="0,0,8,0" />
+                <Button x:Name="ConvertButton" Content="Convert to Safe" Click="ConvertButton_Click"
+                        Style="{StaticResource AccentButton}" IsEnabled="False" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

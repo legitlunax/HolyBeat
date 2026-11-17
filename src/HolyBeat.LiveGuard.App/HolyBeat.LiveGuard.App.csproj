@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>HolyBeat.LiveGuard</AssemblyName>
+    <Product>HolyBeat Live Guard</Product>
+    <Description>Real-time acoustic safety processor built from the HolyBeat 103 track acoustic study.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="3.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HolyBeat.LiveGuard.Core\HolyBeat.LiveGuard.Core.csproj" />
+  </ItemGroup>
+
+</Project>
