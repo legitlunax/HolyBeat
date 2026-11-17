@@ -112,5 +112,7 @@ holder and require prior written permission and a USD $1,000,000 license fee.
 This is **not an open-source license**: it does not grant general commercial
 use or resale rights. Copyright ownership is not transferred by access to this
 public repository. Third-party materials, if any, remain under their own terms.
+See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for dependency
+attributions and license links.
 
 The local build output and reference audio are not included in this repository.
